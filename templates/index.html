@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Natural Language DB Interface</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Natural Language Database Query</h1>
+        {% with messages = get_flashed_messages() %}
+            {% if messages %}
+                <ul class="flashes">
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+                </ul>
+            {% endif %}
+        {% endwith %}
+        <form action="{{ url_for('query') }}" method="post">
+            <textarea name="natural_language" rows="3" cols="50" placeholder="Enter your question here"></textarea><br>
+            <button type="submit">Submit</button>
+        </form>
+        <p><a href="{{ url_for('load_sample') }}">Load sample data</a></p>
+    </div>
+</body>
+</html>

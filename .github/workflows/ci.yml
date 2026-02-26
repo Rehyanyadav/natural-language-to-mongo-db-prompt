@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    services:
+      mongodb:
+        image: mongo:6.0
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.adminCommand(\"ping\")'" \
+          --health-interval 10s \
+          --health-timeout 5s \
+          --health-retries 5
+
+    env:
+      MONGODB_URI: mongodb://localhost:27017
+      MONGODB_DB: nl_db
+      MONGODB_COLL: people
+      OPENAI_API_KEY: dummy_key
+      SECRET_KEY: ci-secret
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Create .env
+        run: |
+          echo "MONGODB_URI=${{ env.MONGODB_URI }}" > .env
+          echo "MONGODB_DB=${{ env.MONGODB_DB }}" >> .env
+          echo "MONGODB_COLL=${{ env.MONGODB_COLL }}" >> .env
+          echo "OPENAI_API_KEY=${{ env.OPENAI_API_KEY }}" >> .env
+          echo "SECRET_KEY=${{ env.SECRET_KEY }}" >> .env
+      - name: Install dependencies
+        run: |
+          python -m venv venv
+          source venv/bin/activate
+          pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Lint with pyflakes
+        run: |
+          source venv/bin/activate
+          pip install pyflakes
+          pyflakes app.py mcp.py
+      - name: Run simple import and db test
+        run: |
+          source venv/bin/activate
+          python -c "import app; print('Imported app successfully'); from app import db; print('Collections:', db.list_collection_names())"
